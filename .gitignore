@@ -23,6 +23,7 @@ frontend/yarn-debug.log*
 frontend/yarn-error.log*
 
 backend/venv/
+backend/.env
 backend/__pycache__/
 backend/*.pyc
 backend/qwen-finetuned

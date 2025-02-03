@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Container, TextField, Button, Typography, 
-  Box, List, ListItem, ListItemText, Avatar,
+  Box, List, ListItem, Avatar,
   CircularProgress
 } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
+
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
 function ChatInterface() {
   const [input, setInput] = useState('');
@@ -25,7 +27,7 @@ function ChatInterface() {
     try {
       const newMessages = [...messages, { role: 'user', content: input }];
 
-      const response = await axios.post('http://localhost:8000/chat', {
+      const response = await axios.post(`${API_URL}/chat`, {
         session_id: sessionId,
         messages: newMessages,
         max_new_tokens: maxTokens

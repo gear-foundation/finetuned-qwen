@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -7,24 +8,21 @@ import torch
 
 app = FastAPI()
 
-# CORS settings
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=os.getenv("CORS_ALLOWED_ORIGINS", "*").split(","),
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Model loading
-model_path = "qwen-finetuned"
-tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
+MODEL_PATH = os.getenv("MODEL_PATH", "qwen-finetuned")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, use_fast=True)
 model = AutoModelForCausalLM.from_pretrained(
-    model_path,
+    MODEL_PATH,
     torch_dtype=torch.bfloat16,
     device_map="auto"
 ).eval()
 
-# Pydantic models
 class Message(BaseModel):
     role: str 
     content: str
@@ -32,10 +30,11 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     session_id: str
     messages: List[Message]
-    max_new_tokens: int = 200
+    max_new_tokens: int = int(os.getenv("MAX_NEW_TOKENS", 200))
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
+    """Chat endpoint for processing user messages and generating AI responses."""
     try:
         formatted_history = [{"role": msg.role, "content": msg.content} for msg in request.messages]
         
@@ -65,12 +64,16 @@ async def chat_endpoint(request: ChatRequest):
         response_messages = request.messages.copy()
         response_messages.append(Message(role="assistant", content=response_content))
         
-        return {"messages": response_messages}  # Возвращаем только историю этой сессии
+        return {"messages": response_messages}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint to verify if the service is running."""
+    return {"status": "ok"}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
