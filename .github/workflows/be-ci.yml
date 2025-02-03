@@ -41,6 +41,7 @@ jobs:
         uses: docker/build-push-action@master
         with:
           file: backend/Dockerfile
+          context: backend
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
 
