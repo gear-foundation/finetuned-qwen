@@ -51,9 +51,12 @@ async def chat_endpoint(request: ChatRequest):
             max_new_tokens=request.max_new_tokens,
             pad_token_id=tokenizer.eos_token_id,
             do_sample=True,
-            temperature=0.1,
+            temperature=0.3,
             top_p=0.1,
-            repetition_penalty=1.2,
+            repetition_penalty=1.3,
+            length_penalty=0.8,
+            no_repeat_ngram_size=4,
+            early_stopping=True
         )
         
         new_tokens = outputs[0][inputs.input_ids.shape[-1]:]
