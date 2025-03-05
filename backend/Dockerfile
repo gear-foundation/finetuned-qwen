@@ -8,9 +8,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN pip install gdown && \
-    gdown --id 1iQsw5iSTDqV2VfwP0kanpM6Htok_tW2o -O model.zip && \
+    gdown --id 1kigjQ0rBYyeGqzomWhaFBhSpgjB8fBe5 -O model.zip && \
     unzip model.zip -d qwen-finetuned && \
-    rm model.zip
+    rm model.zip \
+    gdown --id 1YIKQq2GY4PxNPAVYXTE8Vubd71Gqz-fQ -O model.zip && \
+    unzip model.zip -d bert-model && \
+    rm model.zip \
 
 COPY . .
 

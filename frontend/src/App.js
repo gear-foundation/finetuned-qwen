@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Container, TextField, Button, Typography, 
-  Box, List, ListItem, Avatar,
-  CircularProgress
+  Box, List, ListItem, Avatar, CircularProgress, Chip
 } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -15,6 +14,7 @@ function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false);
   const [maxTokens, setMaxTokens] = useState(200);
   const [sessionId, setSessionId] = useState('');
+  const [bertResult, setBertResult] = useState(null);
 
   useEffect(() => {
     setSessionId(uuidv4());
@@ -22,11 +22,10 @@ function ChatInterface() {
 
   const handleSubmit = async () => {
     if (!input.trim()) return;
-
     setIsLoading(true);
     try {
       const newMessages = [...messages, { role: 'user', content: input }];
-
+      
       const response = await axios.post(`${API_URL}/chat`, {
         session_id: sessionId,
         messages: newMessages,
@@ -34,6 +33,7 @@ function ChatInterface() {
       });
 
       setMessages(response.data.messages);
+      setBertResult(response.data.bert_result);
       setInput('');
     } catch (error) {
       console.error('Error:', error);
@@ -64,6 +64,16 @@ function ChatInterface() {
           )}
         </List>
       </Box>
+      
+      {bertResult !== null && (
+        <Box sx={{ textAlign: 'center', mb: 2 }}>
+          <Chip 
+            label={bertResult === 1 ? "Success" : "Failure"} 
+            color={bertResult === 1 ? "success" : "error"} 
+            sx={{ fontSize: '1.2rem', padding: '10px' }}
+          />
+        </Box>
+      )}
 
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
         <TextField fullWidth variant="outlined" label="Type your message" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSubmit()} />

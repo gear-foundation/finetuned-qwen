@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
 app = FastAPI()
@@ -23,6 +23,10 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="auto"
 ).eval()
 
+BERT_MODEL_PATH = os.getenv("BERT_MODEL_PATH", "bert-model")
+bert_tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL_PATH, use_fast=True)
+bert_model = AutoModelForSequenceClassification.from_pretrained(BERT_MODEL_PATH)
+
 class Message(BaseModel):
     role: str 
     content: str
@@ -31,6 +35,14 @@ class ChatRequest(BaseModel):
     session_id: str
     messages: List[Message]
     max_new_tokens: int = int(os.getenv("MAX_NEW_TOKENS", 200))
+
+def classify_with_bert(text: str) -> int:
+    """BERT"""
+    inputs = bert_tokenizer(text, truncation=True, padding=True, max_length=128, return_tensors="pt")
+    with torch.no_grad():
+        logits = bert_model(**inputs).logits
+    predicted_class = torch.argmax(logits, dim=1).item()
+    return predicted_class
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
@@ -51,11 +63,12 @@ async def chat_endpoint(request: ChatRequest):
             max_new_tokens=request.max_new_tokens,
             pad_token_id=tokenizer.eos_token_id,
             do_sample=True,
-            temperature=0.3,
+            temperature=0.1,
             top_p=0.1,
-            repetition_penalty=1.3,
-            length_penalty=0.8,
-            no_repeat_ngram_size=4,
+            top_k=50,
+            # repetition_penalty=1.1,
+            length_penalty=0.7,
+            # no_repeat_ngram_size=4,
             early_stopping=True
         )
         
@@ -66,8 +79,10 @@ async def chat_endpoint(request: ChatRequest):
         
         response_messages = request.messages.copy()
         response_messages.append(Message(role="assistant", content=response_content))
-        
-        return {"messages": response_messages}
+
+        bert_class = classify_with_bert(response_content)
+
+        return {"messages": response_messages, "bert_result": bert_class}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
