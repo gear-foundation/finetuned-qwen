@@ -6,6 +6,8 @@ from typing import List
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
+MAX_HISTORY_LENGTH = 10
+
 app = FastAPI()
 
 app.add_middleware(
@@ -48,8 +50,7 @@ def classify_with_bert(text: str) -> int:
 async def chat_endpoint(request: ChatRequest):
     """Chat endpoint for processing user messages and generating AI responses."""
     try:
-        formatted_history = [{"role": msg.role, "content": msg.content} for msg in request.messages]
-        
+        formatted_history = [{"role": msg.role, "content": msg.content} for msg in request.messages[-MAX_HISTORY_LENGTH:]]
         text = tokenizer.apply_chat_template(
             formatted_history,
             tokenize=False,

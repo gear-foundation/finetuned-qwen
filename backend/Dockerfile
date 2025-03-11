@@ -11,7 +11,7 @@ RUN pip install gdown && \
     gdown --id 1kigjQ0rBYyeGqzomWhaFBhSpgjB8fBe5 -O model.zip && \
     unzip model.zip -d qwen-finetuned && \
     rm model.zip && \
-    gdown --id 1YIKQq2GY4PxNPAVYXTE8Vubd71Gqz-fQ -O model.zip && \
+    gdown --id 1cW8QIcj4jyox6oRZCutOLnBs_VDKtPGf -O model.zip && \
     unzip model.zip -d bert-model && \
     rm model.zip
 
