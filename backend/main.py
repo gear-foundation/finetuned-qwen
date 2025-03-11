@@ -25,7 +25,7 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="auto"
 ).eval()
 
-BERT_MODEL_PATH = os.getenv("MODEL_PATH", "bert-model")
+BERT_MODEL_PATH = os.getenv("BERT_MODEL_PATH", "bert-model")
 bert_tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL_PATH, use_fast=True)
 bert_model = AutoModelForSequenceClassification.from_pretrained(BERT_MODEL_PATH)
 
